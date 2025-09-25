@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OSI Referans Modeli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 5px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .osi-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .layers-stack {
+            width: 100%;
+        }
+        
+        .info-panel {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid #ecf0f1;
+            min-height: 250px;
+        }
+        
+        .layer {
+            padding: 12px 8px;
+            margin: 2px 0;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .layer:active {
+            transform: scale(0.98);
+        }
+        
+        .layer7 { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .layer6 { background: linear-gradient(45deg, #e67e22, #d35400); }
+        .layer5 { background: linear-gradient(45deg, #f39c12, #e67e22); }
+        .layer4 { background: linear-gradient(45deg, #27ae60, #229954); }
+        .layer3 { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .layer2 { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+        .layer1 { background: linear-gradient(45deg, #34495e, #2c3e50); }
+        
+        .layer-number {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .layer-name {
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+        
+        .layer-desc {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .info-content {
+            display: none;
+        }
+        
+        .info-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .info-title {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            word-wrap: break-word;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .info-description {
+            color: #34495e;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .examples {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .examples h4 {
+            color: white;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .example-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .example-list li {
+            background: white;
+            padding: 8px 12px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+        }
+        
+        .protocol-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .protocol-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+        
+        .protocol-card:active {
+            transform: scale(0.95);
+        }
+        
+        .protocol-card small {
+            display: block;
+            margin-top: 4px;
+            opacity: 0.9;
+            font-size: 0.75em;
+        }
+        
+        .communication-flow {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .flow-title {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .device {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        .arrow {
+            font-size: 1.5rem;
+            color: #f1c40f;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transform: rotate(90deg);
+        }
+        
+        .default-info {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1rem;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            line-height: 1.4;
+        }
+        
+        .flow-description {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        /* Tablet Düzeni (768px - 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            
+            .osi-container {
+                flex-direction: row;
+                gap: 20px;
+            }
+            
+            .layers-stack {
+                flex: 1;
+                min-width: 300px;
+            }
+            
+            .info-panel {
+                flex: 1.5;
+                padding: 20px;
+            }
+            
+            .layer {
+                padding: 15px 12px;
+                margin: 3px 0;
+            }
+            
+            .layer:hover {
+                transform: translateX(8px);
+            }
+            
+            .layer-number {
+                font-size: 1.5rem;
+            }
+            
+            .layer-name {
+                font-size: 1.1rem;
+            }
+            
+            .layer-desc {
+                font-size: 0.9rem;
+            }
+            
+            .info-title {
+                font-size: 1.5rem;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            
+            .info-description {
+                font-size: 1rem;
+            }
+            
+            .protocol-examples {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+            
+            .flow-diagram {
+                flex-direction: row;
+                justify-content: space-around;
+            }
+            
+            .arrow {
+                transform: rotate(0deg);
+                font-size: 1.8rem;
+            }
+            
+            .device {
+                max-width: 150px;
+            }
+        }
+        
+        /* Desktop Düzeni (1024px+) */
+        @media (min-width: 1024px) {
+            .container {
+                padding: 30px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 25px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            
+            .osi-container {
+                flex-direction: row;
+                gap: 30px;
+            }
+            
+            .layers-stack {
+                flex: 1;
+                min-width: 350px;
+            }
+            
+            .info-panel {
+                flex: 1.5;
+                padding: 25px;
+                min-height: 400px;
+            }
+            
+            .layer {
+                padding: 18px 15px;
+                margin: 3px 0;
+            }
+            
+            .layer:hover {
+                transform: translateX(12px) scale(1.02);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            }
+            
+            .layer::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s;
+            }
+            
+            .layer:hover::before {
+                left: 100%;
+            }
+            
+            .layer-number {
+                font-size: 1.8rem;
+            }
+            
+            .layer-name {
+                font-size: 1.2rem;
+            }
+            
+            .layer-desc {
+                font-size: 0.9rem;
+            }
+            
+            .info-title {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            
+            .info-description {
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+            }
+            
+            .examples {
+                padding: 15px;
+            }
+            
+            .protocol-examples {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 12px;
+            }
+            
+            .protocol-card {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .protocol-card:hover {
+                transform: translateY(-3px);
+            }
+            
+            .communication-flow {
+                padding: 25px;
+            }
+            
+            .flow-title {
+                font-size: 1.5rem;
+            }
+            
+            .flow-diagram {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .arrow {
+                transform: rotate(0deg);
+                font-size: 2rem;
+            }
+            
+            .device {
+                padding: 18px;
+                max-width: 180px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Çok küçük ekranlar (480px altı) */
+        @media (max-width: 480px) {
+            body {
+                padding: 3px;
+            }
+            
+            .container {
+                padding: 12px;
+                border-radius: 10px;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+                margin-bottom: 12px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            
+            .layer {
+                padding: 10px 6px;
+            }
+            
+            .layer-number {
+                font-size: 1.1rem;
+            }
+            
+            .layer-name {
+                font-size: 0.9rem;
+            }
+            
+            .layer-desc {
+                font-size: 0.7rem;
+            }
+            
+            .info-panel {
+                padding: 12px;
+                min-height: 200px;
+            }
+            
+            .info-title {
+                font-size: 1.1rem;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            
+            .info-description {
+                font-size: 0.85rem;
+            }
+            
+            .examples {
+                padding: 10px;
+            }
+            
+            .protocol-examples {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            
+            .protocol-card {
+                padding: 8px 6px;
+                font-size: 0.7rem;
+            }
+            
+            .communication-flow {
+                padding: 12px;
+            }
+            
+            .flow-title {
+                font-size: 1rem;
+            }
+            
+            .device {
+                padding: 10px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* iPhone SE ve benzeri küçük ekranlar */
+        @media (max-width: 375px) {
+            .protocol-examples {
+                grid-template-columns: 1fr;
+            }
+            
+            .layer-name {
+                font-size: 0.8rem;
+            }
+            
+            .info-title {
+                font-size: 1rem;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+        }
+        
+        /* Yatay (Landscape) mod */
+        @media screen and (orientation: landscape) and (max-height: 600px) {
+            .osi-container {
+                flex-direction: row;
+            }
+            
+            .layers-stack {
+                flex: 1;
+            }
+            
+            .info-panel {
+                flex: 1.2;
+            }
+            
+            .communication-flow {
+                margin-top: 15px;
+            }
+            
+            .flow-diagram {
+                flex-direction: row;
+            }
+            
+            .arrow {
+                transform: rotate(0deg);
+            }
+        }
+        
+        /* iOS Safari özel ayarlar */
+        @supports (-webkit-touch-callout: none) {
+            .layer {
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            }
+        }
+        
+        /* Android Chrome özel ayarlar */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .layer:focus {
+                outline: 2px solid #3498db;
+                outline-offset: 2px;
+            }
+        }
+        
+        /* High DPI ekranlar için */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .layer {
+                border-width: 1px;
+            }
+            
+            .info-title {
+                border-bottom-width: 2px;
+            }
+        }
+        
+        /* Dark mode desteği */
+        @media (prefers-color-scheme: dark) {
+            .container {
+                background: rgba(45, 52, 64, 0.95);
+                color: #ecf0f1;
+            }
+            
+            .info-panel {
+                background: #2c3e50;
+                border-color: #34495e;
+            }
+            
+            .info-title, .info-description {
+                color: #ecf0f1;
+            }
+            
+            .examples {
+                background: #34495e;
+            }
+            
+            .example-list li {
+                background: #3a4a5c;
+                color: #ecf0f1;
+            }
+            
+            .default-info {
+                background: #34495e;
+                color: #bdc3c7;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 OSI Referans Modeli (7 Katman)</h1>
+        
+        <div class="osi-container">
+            <div class="layers-stack">
+                <div class="layer layer7" onclick="showInfo(7)">
+                    <div class="layer-number">7</div>
+                    <div class="layer-name">Application (Uygulama)</div>
+                    <div class="layer-desc">Kullanıcı arayüzü</div>
+                </div>
+                <div class="layer layer6" onclick="showInfo(6)">
+                    <div class="layer-number">6</div>
+                    <div class="layer-name">Presentation (Sunum)</div>
+                    <div class="layer-desc">Veri şifreleme/sıkıştırma</div>
+                </div>
+                <div class="layer layer5" onclick="showInfo(5)">
+                    <div class="layer-number">5</div>
+                    <div class="layer-name">Session (Oturum)</div>
+                    <div class="layer-desc">Bağlantı yönetimi</div>
+                </div>
+                <div class="layer layer4" onclick="showInfo(4)">
+                    <div class="layer-number">4</div>
+                    <div class="layer-name">Transport (Taşıma)</div>
+                    <div class="layer-desc">Uçtan uca iletim</div>
+                </div>
+                <div class="layer layer3" onclick="showInfo(3)">
+                    <div class="layer-number">3</div>
+                    <div class="layer-name">Network (Ağ)</div>
+                    <div class="layer-desc">Yönlendirme</div>
+                </div>
+                <div class="layer layer2" onclick="showInfo(2)">
+                    <div class="layer-number">2</div>
+                    <div class="layer-name">Data Link (Veri Bağı)</div>
+                    <div class="layer-desc">Çerçeve oluşturma</div>
+                </div>
+                <div class="layer layer1" onclick="showInfo(1)">
+                    <div class="layer-number">1</div>
+                    <div class="layer-name">Physical (Fiziksel)</div>
+                    <div class="layer-desc">Elektriksel sinyaller</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="default-info">
+                    <strong>📱 Bir katmana dokunun ve detayları görün!</strong><br><br>
+                    OSI modeli, ağ iletişimini 7 ayrı katmana bölerek karmaşık süreçleri anlamamızı kolaylaştırır.
+                </div>
+                
+                <div id="info-7" class="info-content">
+                    <h3 class="info-title">🖥️ Katman 7 - Application</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Kullanıcının ağ hizmetlerine erişim noktasıdır. Son kullanıcı uygulamaları ile ağ arasında köprü görevi görür.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Protokoller ve Örnekler:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">HTTP/HTTPS<br><small>Web tarayıcıları</small></div>
+                            <div class="protocol-card">SMTP<br><small>E-posta gönderme</small></div>
+                            <div class="protocol-card">FTP<br><small>Dosya transferi</small></div>
+                            <div class="protocol-card">DNS<br><small>Alan adı çözümleme</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> Chrome'da google.com'a girdiğinizde, HTTP protokolü bu katmanda çalışır.</p>
+                    </div>
+                </div>
+                
+                <div id="info-6" class="info-content">
+                    <h3 class="info-title">🎭 Katman 6 - Presentation</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Veri formatlarını çevirir, şifreler ve sıkıştırır. Farklı sistemler arasında veri uyumluluğunu sağlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Temel İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Şifreleme/Şifre Çözme:</strong> SSL/TLS ile güvenli veri iletimi</li>
+                            <li><strong>Sıkıştırma:</strong> JPEG, GIF gibi dosya sıkıştırma</li>
+                            <li><strong>Format Dönüştürme:</strong> ASCII, EBCDIC karakter setleri arası çeviri</li>
+                            <li><strong>Kod Çözme:</strong> Base64, MIME kodlama</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> WhatsApp'ta fotoğraf gönderdiğinizde, resim sıkıştırılır ve şifrelenir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-5" class="info-content">
+                    <h3 class="info-title">🤝 Katman 5 - Session</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> İki cihaz arasında oturum başlatır, yönetir ve sonlandırır. İletişim senkronizasyonunu sağlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Temel İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Oturum Kurma:</strong> İki uygulama arasında bağlantı başlatma</li>
+                            <li><strong>Senkronizasyon:</strong> Veri akışında kontrol noktaları oluşturma</li>
+                            <li><strong>Diyalog Kontrolü:</strong> Tek yönlü veya çift yönlü iletişim</li>
+                            <li><strong>Oturum Kurtarma:</strong> Kesintilerden sonra kaldığı yerden devam</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Zoom toplantısında kameranızı açıp kapatmanız, bu katmanda yönetilir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-4" class="info-content">
+                    <h3 class="info-title">🚚 Katman 4 - Transport</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Uçtan uca güvenilir veri iletimi sağlar. Hata kontrolü, akış kontrolü ve veri bütünlüğü sorumluluğundadır.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Ana Protokoller:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">TCP<br><small>Güvenilir, sıralı iletim</small></div>
+                            <div class="protocol-card">UDP<br><small>Hızlı, hafif iletim</small></div>
+                        </div>
+                        <ul class="example-list">
+                            <li><strong>Port Numaraları:</strong> HTTP:80, HTTPS:443, FTP:21</li>
+                            <li><strong>Segmentasyon:</strong> Büyük verileri küçük parçalara böler</li>
+                            <li><strong>Hata Kontrolü:</strong> Kayıp paketleri yeniden gönderir</li>
+                            <li><strong>Akış Kontrolü:</strong> Gönderici hızını alıcıya göre ayarlar</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Netflix izlerken, video verileri TCP ile güvenilir şekilde gelir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-3" class="info-content">
+                    <h3 class="info-title">🗺️ Katman 3 - Network</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Paketlerin kaynak ile hedef arasında en iyi yolu bulmasını sağlar. IP adresleme ve yönlendirme işlemleri burada yapılır.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Ana Protokoller ve Kavramlar:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">IPv4/IPv6<br><small>IP adresleme</small></div>
+                            <div class="protocol-card">ICMP<br><small>Hata mesajları</small></div>
+                            <div class="protocol-card">OSPF/RIP<br><small>Yönlendirme</small></div>
+                        </div>
+                        <ul class="example-list">
+                            <li><strong>IP Adresleme:</strong> 192.168.1.1 gibi mantıksal adresler</li>
+                            <li><strong>Yönlendirme:</strong> Router'lar en iyi yolu seçer</li>
+                            <li><strong>Paket Yönlendirme:</strong> Farklı ağlar arası iletişim</li>
+                            <li><strong>Alt Ağ Oluşturma:</strong> Büyük ağları küçük parçalara böler</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Google.com'a mesaj gönderdiğinizde, router'lar en hızlı yolu bulur.</p>
+                    </div>
+                </div>
+                
+                <div id="info-2" class="info-content">
+                    <h3 class="info-title">🔗 Katman 2 - Data Link</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Aynı ağdaki cihazlar arası güvenilir iletişimi sağlar. MAC adreslerini kullanır ve çerçeve (frame) oluşturur.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Alt Katmanlar ve İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>LLC (Logical Link Control):</strong> Hata kontrolü ve akış kontrolü</li>
+                            <li><strong>MAC (Media Access Control):</strong> Fiziksel adresleme</li>
+                            <li><strong>Çerçeve Oluşturma:</strong> Veriyi header ve trailer ile çevreler</li>
+                            <li><strong>Hata Tespiti:</strong> CRC ile bozuk çerçeveleri tespit eder</li>
+                        </ul>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">Ethernet<br><small>Kablolu ağlar</small></div>
+                            <div class="protocol-card">WiFi (802.11)<br><small>Kablosuz ağlar</small></div>
+                            <div class="protocol-card">PPP<br><small>Noktadan noktaya</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> WiFi'ye bağlandığınızda, cihazınızın MAC adresi kullanılır.</p>
+                    </div>
+                </div>
+                
+                <div id="info-1" class="info-content">
+                    <h3 class="info-title">⚡ Katman 1 - Physical</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Veriyi elektriksel, optik veya radyo sinyallerine dönüştürür. Fiziksel iletim ortamını tanımlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Fiziksel Bileşenler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Kablolar:</strong> Ethernet (Cat5e, Cat6), Fiber optik</li>
+                            <li><strong>Konektörler:</strong> RJ45, SC, LC konektörleri</li>
+                            <li><strong>Cihazlar:</strong> Hub, Repeater, Modem</li>
+                            <li><strong>Sinyaller:</strong> Elektriksel voltaj, ışık, radyo dalgaları</li>
+                        </ul>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">Bit Kodlama<br><small>Manchester, NRZ</small></div>
+                            <div class="protocol-card">Sinyal Türleri<br><small>Analog, Dijital</small></div>
+                            <div class="protocol-card">İletim Ortamı<br><small>Kablo, Hava</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> Ethernet kablosundaki elektriksel sinyaller, 1 ve 0'ları temsil eder.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="communication-flow">
+            <h3 class="flow-title">📡 Veri İletim Süreci</h3>
+            <div class="flow-diagram">
+                <div class="device">
+                    <strong>Gönderici</strong><br>
+                    7→6→5→4→3→2→1
+                </div>
+                <div class="arrow">📡</div>
+                <div class="device">
+                    <strong>Ağ</strong><br>
+                    (İnternet)
+                </div>
+                <div class="arrow">📡</div>
+                <div class="device">
+                    <strong>Alıcı</strong><br>
+                    1→2→3→4→5→6→7
+                </div>
+            </div>
+            <div class="flow-description">
+                <strong>Kapsülleme (Encapsulation):</strong> Gönderici tarafta her katman kendi bilgilerini ekler<br>
+                <strong>Açma (Decapsulation):</strong> Alıcı tarafta her katman kendi bilgilerini çıkarır
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showInfo(layerNum) {
+            try {
+                // Tüm info-content'leri gizle
+                const allInfos = document.querySelectorAll('.info-content');
+                allInfos.forEach(function(info) {
+                    info.classList.remove('active');
+                });
+                
+                // Default info'yu gizle
+                const defaultInfo = document.querySelector('.default-info');
+                if (defaultInfo) {
+                    defaultInfo.style.display = 'none';
+                }
+                
+                // Seçili katmanın bilgisini göster
+                const selectedInfo = document.getElementById('info-' + layerNum);
+                if (selectedInfo) {
+                    selectedInfo.classList.add('active');
+                }
+                
+                // Seçili katmanı vurgula
+                const allLayers = document.querySelectorAll('.layer');
+                allLayers.forEach(function(layer) {
+                    layer.style.transform = '';
+                    layer.style.boxShadow = '';
+                });
+                
+                const selectedLayer = document.querySelector('.layer' + layerNum);
+                if (selectedLayer) {
+                    selectedLayer.style.transform = 'scale(1.05)';
+                    selectedLayer.style.boxShadow = '0 8px 20px rgba(0,0,0,0.4)';
+                    
+                    setTimeout(function() {
+                        if (window.innerWidth > 768) {
+                            selectedLayer.style.transform = 'translateX(10px) scale(1.02)';
+                        } else {
+                            selectedLayer.style.transform = 'scale(1.02)';
+                        }
+                    }, 200);
+                }
+            } catch (error) {
+                console.log('Bilgi gösterme hatası:', error);
+            }
+        }
+        
+        // Sayfa yüklendiğinde 4. katmanı varsayılan olarak göster
+        document.addEventListener('DOMContentLoaded', function() {
+            showInfo(4);
+        });
+        
+        // Touch eventleri için ek destek
+        document.addEventListener('touchstart', function() {
+            // Touch desteği için boş fonksiyon
+        });
+        
+        // Orientasyon değişikliği için
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                // Aktif katmanı yeniden vurgula
+                const activeInfo = document.querySelector('.info-content.active');
+                if (activeInfo) {
+                    const layerNum = activeInfo.id.split('-')[1];
+                    showInfo(parseInt(layerNum));
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
