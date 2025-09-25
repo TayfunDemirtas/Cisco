@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSI Referans Modeli</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .osi-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        .layers-stack {
+            flex: 1;
+            min-width: 300px;
+        }
+        .layer {
+            padding: 20px;
+            margin: 3px 0;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .layer:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .layer:hover::before {
+            left: 100%;
+        }
+        .layer7 { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .layer6 { background: linear-gradient(45deg, #e67e22, #d35400); }
+        .layer5 { background: linear-gradient(45deg, #f39c12, #e67e22); }
+        .layer4 { background: linear-gradient(45deg, #27ae60, #229954); }
+        .layer3 { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .layer2 { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+        .layer1 { background: linear-gradient(45deg, #34495e, #2c3e50); }
+        
+        .layer-number {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .layer-name {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        .layer-desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .info-panel {
+            flex: 1.5;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 2px solid #ecf0f1;
+        }
+        .info-content {
+            display: none;
+        }
+        .info-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .info-description {
+            color: #34495e;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .examples {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+        }
+        .examples h4 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        .example-list {
+            list-style: none;
+            padding: 0;
+        }
+        .example-list li {
+            background: white;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .communication-flow {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 15px;
+            color: white;
+        }
+        .flow-title {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .device {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            min-width: 150px;
+        }
+        .arrow {
+            font-size: 2em;
+            color: #f1c40f;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .default-info {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.2em;
+            padding: 50px;
+            background: #ecf0f1;
+            border-radius: 10px;
+        }
+        .protocol-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .protocol-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .protocol-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 OSI Referans Modeli (7 Katman)</h1>
+        
+        <div class="osi-container">
+            <div class="layers-stack">
+                <div class="layer layer7" onclick="showInfo(7)">
+                    <div class="layer-number">7</div>
+                    <div class="layer-name">Application (Uygulama)</div>
+                    <div class="layer-desc">Kullanıcı arayüzü</div>
+                </div>
+                <div class="layer layer6" onclick="showInfo(6)">
+                    <div class="layer-number">6</div>
+                    <div class="layer-name">Presentation (Sunum)</div>
+                    <div class="layer-desc">Veri şifreleme/sıkıştırma</div>
+                </div>
+                <div class="layer layer5" onclick="showInfo(5)">
+                    <div class="layer-number">5</div>
+                    <div class="layer-name">Session (Oturum)</div>
+                    <div class="layer-desc">Bağlantı yönetimi</div>
+                </div>
+                <div class="layer layer4" onclick="showInfo(4)">
+                    <div class="layer-number">4</div>
+                    <div class="layer-name">Transport (Taşıma)</div>
+                    <div class="layer-desc">Uçtan uca iletim</div>
+                </div>
+                <div class="layer layer3" onclick="showInfo(3)">
+                    <div class="layer-number">3</div>
+                    <div class="layer-name">Network (Ağ)</div>
+                    <div class="layer-desc">Yönlendirme</div>
+                </div>
+                <div class="layer layer2" onclick="showInfo(2)">
+                    <div class="layer-number">2</div>
+                    <div class="layer-name">Data Link (Veri Bağı)</div>
+                    <div class="layer-desc">Çerçeve oluşturma</div>
+                </div>
+                <div class="layer layer1" onclick="showInfo(1)">
+                    <div class="layer-number">1</div>
+                    <div class="layer-name">Physical (Fiziksel)</div>
+                    <div class="layer-desc">Elektriksel sinyaller</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="default-info">
+                    <strong>Bir katmana tıklayın ve detayları görün!</strong><br>
+                    OSI modeli, ağ iletişimini 7 ayrı katmana bölerek karmaşık süreçleri anlamamızı kolaylaştırır.
+                </div>
+                
+                <div id="info-7" class="info-content">
+                    <h3 class="info-title">🖥️ Katman 7 - Application (Uygulama Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Kullanıcının ağ hizmetlerine erişim noktasıdır. Son kullanıcı uygulamaları ile ağ arasında köprü görevi görür.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Protokoller ve Örnekler:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">HTTP/HTTPS<br><small>Web tarayıcıları</small></div>
+                            <div class="protocol-card">SMTP<br><small>E-posta gönderme</small></div>
+                            <div class="protocol-card">FTP<br><small>Dosya transferi</small></div>
+                            <div class="protocol-card">DNS<br><small>Alan adı çözümleme</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> Chrome'da google.com'a girdiğinizde, HTTP protokolü bu katmanda çalışır.</p>
+                    </div>
+                </div>
+                
+                <div id="info-6" class="info-content">
+                    <h3 class="info-title">🎭 Katman 6 - Presentation (Sunum Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Veri formatlarını çevirir, şifreler ve sıkıştırır. Farklı sistemler arasında veri uyumluluğunu sağlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Temel İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Şifreleme/Şifre Çözme:</strong> SSL/TLS ile güvenli veri iletimi</li>
+                            <li><strong>Sıkıştırma:</strong> JPEG, GIF gibi dosya sıkıştırma</li>
+                            <li><strong>Format Dönüştürme:</strong> ASCII, EBCDIC karakter setleri arası çeviri</li>
+                            <li><strong>Kod Çözme:</strong> Base64, MIME kodlama</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> WhatsApp'ta fotoğraf gönderdiğinizde, resim sıkıştırılır ve şifrelenir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-5" class="info-content">
+                    <h3 class="info-title">🤝 Katman 5 - Session (Oturum Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> İki cihaz arasında oturum başlatır, yönetir ve sonlandırır. İletişim senkronizasyonunu sağlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Temel İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Oturum Kurma:</strong> İki uygulama arasında bağlantı başlatma</li>
+                            <li><strong>Senkronizasyon:</strong> Veri akışında kontrol noktaları oluşturma</li>
+                            <li><strong>Diyalog Kontrolü:</strong> Tek yönlü veya çift yönlü iletişim</li>
+                            <li><strong>Oturum Kurtarma:</strong> Kesintilerden sonra kaldığı yerden devam</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Zoom toplantısında kameranızı açıp kapatmanız, bu katmanda yönetilir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-4" class="info-content">
+                    <h3 class="info-title">🚚 Katman 4 - Transport (Taşıma Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Uçtan uca güvenilir veri iletimi sağlar. Hata kontrolü, akış kontrolü ve veri bütünlüğü sorumluluğundadır.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Ana Protokoller:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">TCP<br><small>Güvenilir, sıralı iletim</small></div>
+                            <div class="protocol-card">UDP<br><small>Hızlı, hafif iletim</small></div>
+                        </div>
+                        <ul class="example-list">
+                            <li><strong>Port Numaraları:</strong> HTTP:80, HTTPS:443, FTP:21</li>
+                            <li><strong>Segmentasyon:</strong> Büyük verileri küçük parçalara böler</li>
+                            <li><strong>Hata Kontrolü:</strong> Kayıp paketleri yeniden gönderir</li>
+                            <li><strong>Akış Kontrolü:</strong> Gönderici hızını alıcıya göre ayarlar</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Netflix izlerken, video verileri TCP ile güvenilir şekilde gelir.</p>
+                    </div>
+                </div>
+                
+                <div id="info-3" class="info-content">
+                    <h3 class="info-title">🗺️ Katman 3 - Network (Ağ Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Paketlerin kaynak ile hedef arasında en iyi yolu bulmasını sağlar. IP adresleme ve yönlendirme işlemleri burada yapılır.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Ana Protokoller ve Kavramlar:</h4>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">IPv4/IPv6<br><small>IP adresleme</small></div>
+                            <div class="protocol-card">ICMP<br><small>Hata mesajları</small></div>
+                            <div class="protocol-card">OSPF/RIP<br><small>Yönlendirme</small></div>
+                        </div>
+                        <ul class="example-list">
+                            <li><strong>IP Adresleme:</strong> 192.168.1.1 gibi mantıksal adresler</li>
+                            <li><strong>Yönlendirme:</strong> Router'lar en iyi yolu seçer</li>
+                            <li><strong>Paket Yönlendirme:</strong> Farklı ağlar arası iletişim</li>
+                            <li><strong>Alt Ağ Oluşturma:</strong> Büyük ağları küçük parçalara böler</li>
+                        </ul>
+                        <p><strong>Günlük Hayat Örneği:</strong> Google.com'a mesaj gönderdiğinizde, router'lar en hızlı yolu bulur.</p>
+                    </div>
+                </div>
+                
+                <div id="info-2" class="info-content">
+                    <h3 class="info-title">🔗 Katman 2 - Data Link (Veri Bağı Katmanı)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Aynı ağdaki cihazlar arası güvenilir iletişimi sağlar. MAC adreslerini kullanır ve çerçeve (frame) oluşturur.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Alt Katmanlar ve İşlevler:</h4>
+                        <ul class="example-list">
+                            <li><strong>LLC (Logical Link Control):</strong> Hata kontrolü ve akış kontrolü</li>
+                            <li><strong>MAC (Media Access Control):</strong> Fiziksel adresleme</li>
+                            <li><strong>Çerçeve Oluşturma:</strong> Veriyi header ve trailer ile çevreler</li>
+                            <li><strong>Hata Tespiti:</strong> CRC ile bozuk çerçeveleri tespit eder</li>
+                        </ul>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">Ethernet<br><small>Kablolu ağlar</small></div>
+                            <div class="protocol-card">WiFi (802.11)<br><small>Kablosuz ağlar</small></div>
+                            <div class="protocol-card">PPP<br><small>Noktadan noktaya</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> WiFi'ye bağlandığınızda, cihazınızın MAC adresi kullanılır.</p>
+                    </div>
+                </div>
+                
+                <div id="info-1" class="info-content">
+                    <h3 class="info-title">⚡ Katman 1 - Physical (Fiziksel Katman)</h3>
+                    <p class="info-description">
+                        <strong>Görev:</strong> Veriyi elektriksel, optik veya radyo sinyallerine dönüştürür. Fiziksel iletim ortamını tanımlar.
+                    </p>
+                    <div class="examples">
+                        <h4>🔧 Fiziksel Bileşenler:</h4>
+                        <ul class="example-list">
+                            <li><strong>Kablolar:</strong> Ethernet (Cat5e, Cat6), Fiber optik</li>
+                            <li><strong>Konektörler:</strong> RJ45, SC, LC konektörleri</li>
+                            <li><strong>Cihazlar:</strong> Hub, Repeater, Modem</li>
+                            <li><strong>Sinyaller:</strong> Elektriksel voltaj, ışık, radyo dalgaları</li>
+                        </ul>
+                        <div class="protocol-examples">
+                            <div class="protocol-card">Bit Kodlama<br><small>Manchester, NRZ</small></div>
+                            <div class="protocol-card">Sinyal Türleri<br><small>Analog, Dijital</small></div>
+                            <div class="protocol-card">İletim Ortamı<br><small>Kablo, Hava</small></div>
+                        </div>
+                        <p><strong>Günlük Hayat Örneği:</strong> Ethernet kablosundaki elektriksel sinyaller, 1 ve 0'ları temsil eder.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="communication-flow">
+            <h3 class="flow-title">📡 Veri İletim Süreci (Gönderici → Alıcı)</h3>
+            <div class="flow-diagram">
+                <div class="device">
+                    <strong>Gönderici</strong><br>
+                    7→6→5→4→3→2→1
+                </div>
+                <div class="arrow">📡</div>
+                <div class="device">
+                    <strong>Ağ (İnternet)</strong><br>
+                    Fiziksel İletim
+                </div>
+                <div class="arrow">📡</div>
+                <div class="device">
+                    <strong>Alıcı</strong><br>
+                    1→2→3→4→5→6→7
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 20px;">
+                <strong>Kapsülleme (Encapsulation):</strong> Gönderici tarafta her katman kendi bilgilerini ekler<br>
+                <strong>Açma (Decapsulation):</strong> Alıcı tarafta her katman kendi bilgilerini çıkarır
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function showInfo(layerNum) {
+            // Tüm info-content'leri gizle
+            const allInfos = document.querySelectorAll('.info-content');
+            allInfos.forEach(info => info.classList.remove('active'));
+            
+            // Default info'yu gizle
+            const defaultInfo = document.querySelector('.default-info');
+            if (defaultInfo) defaultInfo.style.display = 'none';
+            
+            // Seçili katmanın bilgisini göster
+            const selectedInfo = document.getElementById(`info-${layerNum}`);
+            if (selectedInfo) selectedInfo.classList.add('active');
+            
+            // Seçili katmanı vurgula
+            const allLayers = document.querySelectorAll('.layer');
+            allLayers.forEach(layer => layer.style.transform = '');
+            
+            const selectedLayer = document.querySelector(`.layer${layerNum}`);
+            if (selectedLayer) {
+                selectedLayer.style.transform = 'translateX(15px) scale(1.02)';
+                setTimeout(() => {
+                    selectedLayer.style.transform = 'translateX(10px)';
+                }, 200);
+            }
+        }
+        
+        // Sayfa yüklendiğinde 4. katmanı varsayılan olarak göster
+        document.addEventListener('DOMContentLoaded', function() {
+            showInfo(4);
+        });
+    </script>
+</body>
+</html>
