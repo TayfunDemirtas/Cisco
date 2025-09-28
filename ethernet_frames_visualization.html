@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethernet Frame Yapıları</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .frame-container {
+            margin: 30px 0;
+            border: 3px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .frame-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background: #3498db;
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .frame-structure {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .field {
+            padding: 15px 10px;
+            text-align: center;
+            border-right: 2px solid #34495e;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .field:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        
+        .field.active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 20;
+            border: 3px solid #FFD700;
+        }
+        
+        .field:last-child {
+            border-right: none;
+        }
+        
+        .preamble { background: #ff6b6b; color: white; flex: 1; min-width: 120px; }
+        .destination { background: #4ecdc4; color: white; flex: 1.5; min-width: 120px; }
+        .source { background: #45b7d1; color: white; flex: 1.5; min-width: 120px; }
+        .length-type { background: #f39c12; color: white; flex: 1; min-width: 100px; }
+        .dsap { background: #e74c3c; color: white; flex: 0.8; min-width: 80px; }
+        .ssap { background: #9b59b6; color: white; flex: 0.8; min-width: 80px; }
+        .control { background: #1abc9c; color: white; flex: 0.8; min-width: 80px; }
+        .data { background: #27ae60; color: white; flex: 3; min-width: 150px; }
+        .fcs { background: #34495e; color: white; flex: 1; min-width: 100px; }
+        
+        .field-size {
+            font-size: 0.8em;
+            opacity: 0.9;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .info-panel {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            min-height: 200px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .info-panel.show {
+            display: block;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .info-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ecf0f1;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .info-content {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .info-content h4 {
+            color: #3498db;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .info-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .info-content li {
+            margin: 8px 0;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .comparison-item {
+            background: linear-gradient(145deg, #ffffff, #f1f3f4);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+        }
+        
+        .comparison-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .example-section {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .example-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ecf0f1;
+        }
+        
+        .hex-example {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            color: #00ff41;
+            overflow-x: auto;
+            border: 2px solid #00ff41;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .instruction {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .field {
+                flex: 1;
+                min-width: 80px;
+                font-size: 0.8em;
+            }
+            
+            .legend {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 OSI Data Link Layer - Frame Yapıları</h1>
+        
+        <div class="instruction">
+            👆 Aşağıdaki frame alanlarına tıklayarak detaylı açıklamaları görebilirsiniz!
+        </div>
+        
+        <div class="frame-container">
+            <div class="frame-title">IEEE 802.2 LLC Frame (Ethernet 802.3)</div>
+            <div class="frame-structure">
+                <div class="field preamble" data-field="preamble">
+                    Preamble + SFD
+                    <span class="field-size">8 bytes</span>
+                </div>
+                <div class="field destination" data-field="destination">
+                    Destination MAC
+                    <span class="field-size">6 bytes</span>
+                </div>
+                <div class="field source" data-field="source">
+                    Source MAC
+                    <span class="field-size">6 bytes</span>
+                </div>
+                <div class="field length-type" data-field="length">
+                    Length
+                    <span class="field-size">2 bytes</span>
+                </div>
+                <div class="field dsap" data-field="dsap">
+                    DSAP
+                    <span class="field-size">1 byte</span>
+                </div>
+                <div class="field ssap" data-field="ssap">
+                    SSAP
+                    <span class="field-size">1 byte</span>
+                </div>
+                <div class="field control" data-field="control">
+                    Control
+                    <span class="field-size">1-2 bytes</span>
+                </div>
+                <div class="field data" data-field="data">
+                    Data (Payload)
+                    <span class="field-size">46-1497 bytes</span>
+                </div>
+                <div class="field fcs" data-field="fcs">
+                    FCS
+                    <span class="field-size">4 bytes</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="frame-container">
+            <div class="frame-title">Ethernet II Frame (DIX)</div>
+            <div class="frame-structure">
+                <div class="field preamble" data-field="preamble">
+                    Preamble + SFD
+                    <span class="field-size">8 bytes</span>
+                </div>
+                <div class="field destination" data-field="destination">
+                    Destination MAC
+                    <span class="field-size">6 bytes</span>
+                </div>
+                <div class="field source" data-field="source">
+                    Source MAC
+                    <span class="field-size">6 bytes</span>
+                </div>
+                <div class="field length-type" data-field="ethertype">
+                    EtherType
+                    <span class="field-size">2 bytes</span>
+                </div>
+                <div class="field data" style="flex: 4;" data-field="data">
+                    Data (Payload)
+                    <span class="field-size">46-1500 bytes</span>
+                </div>
+                <div class="field fcs" data-field="fcs">
+                    FCS
+                    <span class="field-size">4 bytes</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="info-panel" class="info-panel">
+            <div class="info-title" id="info-title">Alan Bilgisi</div>
+            <div class="info-content" id="info-content">
+                Bir alana tıklayarak detaylı bilgi görüntüleyin.
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff6b6b;"></div>
+                <span>Senkronizasyon</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ecdc4;"></div>
+                <span>Hedef Adres</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #45b7d1;"></div>
+                <span>Kaynak Adres</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f39c12;"></div>
+                <span>Tür/Uzunluk</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #27ae60;"></div>
+                <span>Veri</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #34495e;"></div>
+                <span>Hata Kontrolü</span>
+            </div>
+        </div>
+        
+        <div class="comparison">
+            <div class="comparison-item">
+                <div class="comparison-title">🔧 IEEE 802.2 LLC Özellikleri</div>
+                <ul>
+                    <li><strong>DSAP:</strong> Destination Service Access Point - Hedef servis erişim noktası</li>
+                    <li><strong>SSAP:</strong> Source Service Access Point - Kaynak servis erişim noktası</li>
+                    <li><strong>Control:</strong> Frame kontrol bilgisi (I, S, U frame türleri)</li>
+                    <li><strong>Length:</strong> Payload uzunluğu (≤ 1500)</li>
+                    <li><strong>Kullanım:</strong> Kurumsal ağlarda, IBM SNA</li>
+                </ul>
+            </div>
+            
+            <div class="comparison-item">
+                <div class="comparison-title">⚡ Ethernet II Özellikleri</div>
+                <ul>
+                    <li><strong>EtherType:</strong> Üst katman protokol tanımlayıcısı (> 1500)</li>
+                    <li><strong>Basitlik:</strong> LLC header'ı yok, daha az overhead</li>
+                    <li><strong>Hız:</strong> Daha hızlı işleme</li>
+                    <li><strong>Popülerlik:</strong> Internet'te en yaygın kullanılan</li>
+                    <li><strong>Protokoller:</strong> IP (0x0800), ARP (0x0806)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="example-section">
+            <div class="example-title">🔍 Gerçek Frame Örnekleri</div>
+            
+            <h3>Ethernet II - HTTP Paketi Örneği:</h3>
+            <div class="hex-example">
+FF FF FF FF FF FF FF AB  00 1B 21 3C A2 B4 00 1F
+5B 4A C8 D6 08 00 45 00  00 54 1F 27 40 00 80 06
+7C CB C0 A8 01 64 C0 A8  01 01 ...
+            </div>
+            <p><strong>Analiz:</strong></p>
+            <ul>
+                <li>Destination MAC: FF:FF:FF:FF:FF:FF (Broadcast)</li>
+                <li>Source MAC: 00:1B:21:3C:A2:B4</li>
+                <li>EtherType: 0x0800 (IPv4)</li>
+                <li>IPv4 Header başlıyor: 45 00...</li>
+            </ul>
+            
+            <h3>802.2 LLC Frame Örneği:</h3>
+            <div class="hex-example">
+00 1B 21 3C A2 B4 00 1F  5B 4A C8 D6 00 2E AA AA
+03 00 00 00 08 00 45 00  00 1C 1F 27 40 00 80 01
+            </div>
+            <p><strong>Analiz:</strong></p>
+            <ul>
+                <li>Length: 0x002E (46 bytes payload)</li>
+                <li>DSAP: 0xAA (SNAP)</li>
+                <li>SSAP: 0xAA (SNAP)</li>
+                <li>Control: 0x03 (Unnumbered frame)</li>
+                <li>SNAP header: 00-00-00-08-00 (IPv4)</li>
+            </ul>
+        </div>
+        
+        <div class="example-section">
+            <div class="example-title">📊 Yaygın EtherType Değerleri</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>0x0800</strong> - IPv4
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>0x0806</strong> - ARP
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>0x86DD</strong> - IPv6
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <strong>0x8100</strong> - VLAN Tagged
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fieldInfo = {
+            'preamble': {
+                title: '🔄 Preamble + SFD (Start Frame Delimiter)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 8 bytes (64 bit)</li>
+                        <li><strong>Preamble:</strong> 7 bytes (01010101...)</li>
+                        <li><strong>SFD:</strong> 1 byte (10101011)</li>
+                    </ul>
+                    
+                    <h4>🎯 Fonksiyon:</h4>
+                    <ul>
+                        <li><strong>Senkronizasyon:</strong> Alıcı ve verici arasında saat senkronizasyonu sağlar</li>
+                        <li><strong>Frame Başlangıcı:</strong> Frame'in başlangıcını işaretler</li>
+                        <li><strong>Physical Layer:</strong> Fiziksel katmanda işlenir, switch/router'da görünmez</li>
+                        <li><strong>Manchester Encoding:</strong> 10 Mbps Ethernet'te kullanılır</li>
+                    </ul>
+                    
+                    <h4>💡 Teknik Detay:</h4>
+                    <ul>
+                        <li>Preamble: 7 × 0x55 (01010101 binary pattern)</li>
+                        <li>SFD: 0xAB (10101011 binary pattern)</li>
+                        <li>Alıcı kartı bu pattern'i tanıyarak frame'i yakalamaya başlar</li>
+                    </ul>
+                `
+            },
+            
+            'destination': {
+                title: '📧 Destination MAC Address',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 6 bytes (48 bit)</li>
+                        <li><strong>Format:</strong> XX:XX:XX:XX:XX:XX (hex)</li>
+                        <li><strong>Örnek:</strong> 00:1B:44:11:3A:B7</li>
+                    </ul>
+                    
+                    <h4>🎯 Adres Türleri:</h4>
+                    <ul>
+                        <li><strong>Unicast:</strong> Tek bir cihaza gönderim (LSB = 0)</li>
+                        <li><strong>Multicast:</strong> Grup gönderimi (LSB = 1)</li>
+                        <li><strong>Broadcast:</strong> FF:FF:FF:FF:FF:FF (tüm cihazlar)</li>
+                    </ul>
+                    
+                    <h4>🔍 MAC Adres Yapısı:</h4>
+                    <ul>
+                        <li><strong>İlk 3 byte:</strong> OUI (Organizationally Unique Identifier) - Üretici kodu</li>
+                        <li><strong>Son 3 byte:</strong> NIC (Network Interface Controller) - Cihaz özel kodu</li>
+                        <li><strong>Local/Global bit:</strong> 2. bit, yerel mi global mi belirtir</li>
+                    </ul>
+                    
+                    <h4>💡 Örnekler:</h4>
+                    <ul>
+                        <li>Intel NIC: 00:1B:21:XX:XX:XX</li>
+                        <li>Cisco: 00:1C:0E:XX:XX:XX</li>
+                        <li>Apple: 00:1F:F3:XX:XX:XX</li>
+                    </ul>
+                `
+            },
+            
+            'source': {
+                title: '📤 Source MAC Address',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 6 bytes (48 bit)</li>
+                        <li><strong>Format:</strong> XX:XX:XX:XX:XX:XX (hex)</li>
+                        <li><strong>Rol:</strong> Frame'i gönderen cihazın MAC adresi</li>
+                    </ul>
+                    
+                    <h4>🎯 Özellikler:</h4>
+                    <ul>
+                        <li><strong>Tek Yönlü:</strong> Sadece gönderen cihazın adresi</li>
+                        <li><strong>Layer 2 Routing:</strong> Switch'ler bu adrese göre MAC tablosunu öğrenir</li>
+                        <li><strong>Değişmez:</strong> Aynı collision domain içinde değişmez</li>
+                        <li><strong>Router Geçişi:</strong> Router'dan geçerken değişir</li>
+                    </ul>
+                    
+                    <h4>🔄 Switch Öğrenme Süreci:</h4>
+                    <ul>
+                        <li>Frame geldiğinde source MAC'i hangi port'tan geldiğini kaydet</li>
+                        <li>MAC Address Table'a ekle</li>
+                        <li>Aging time (varsayılan 300 saniye) sonra tablodan sil</li>
+                        <li>Dinamik öğrenme ile tablo güncel tutulur</li>
+                    </ul>
+                    
+                    <h4>💡 Güvenlik:</h4>
+                    <ul>
+                        <li><strong>MAC Spoofing:</strong> Sahte MAC adresi kullanma saldırısı</li>
+                        <li><strong>Port Security:</strong> Port başına MAC sayısı sınırlama</li>
+                        <li><strong>DHCP Snooping:</strong> MAC-IP eşleştirmesi kontrol</li>
+                    </ul>
+                `
+            },
+            
+            'length': {
+                title: '📏 Length Field (802.3)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 2 bytes (16 bit)</li>
+                        <li><strong>Değer Aralığı:</strong> 0-1500 bytes</li>
+                        <li><strong>Fonksiyon:</strong> Payload'ın byte cinsinden uzunluğu</li>
+                    </ul>
+                    
+                    <h4>🎯 IEEE 802.3 Standardı:</h4>
+                    <ul>
+                        <li><strong>Maksimum:</strong> 1500 byte (0x05DC)</li>
+                        <li><strong>Minimum:</strong> 46 byte (padding ile)</li>
+                        <li><strong>Padding:</strong> 46 byte'tan kısa ise sıfırlarla doldurulur</li>
+                        <li><strong>LLC Header:</strong> Length'ten sonra LLC header gelir</li>
+                    </ul>
+                    
+                    <h4>📊 Length vs EtherType Ayrımı:</h4>
+                    <ul>
+                        <li><strong>≤ 1500 (0x05DC):</strong> 802.3 Length field</li>
+                        <li><strong>> 1500 (>0x05DC):</strong> Ethernet II EtherType</li>
+                        <li><strong>1501-1535:</strong> Kullanılmaz (invalid range)</li>
+                    </ul>
+                    
+                    <h4>🔍 Örnek Hesaplama:</h4>
+                    <ul>
+                        <li>Total frame: 64 byte</li>
+                        <li>Header (DA+SA+Length): 14 byte</li>
+                        <li>FCS: 4 byte</li>
+                        <li>Payload: 64-14-4 = 46 byte</li>
+                        <li>Length field: 0x002E (46 decimal)</li>
+                    </ul>
+                    
+                    <h4>⚠️ Padding Durumu:</h4>
+                    <ul>
+                        <li>Minimum frame size: 64 byte</li>
+                        <li>Eğer payload < 46 byte ise padding eklenir</li>
+                        <li>Length gerçek payload boyutunu gösterir</li>
+                        <li>Alıcı padding'i length'e göre ayırır</li>
+                    </ul>
+                `
+            },
+            
+            'ethertype': {
+                title: '🏷️ EtherType Field (Ethernet II)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 2 bytes (16 bit)</li>
+                        <li><strong>Değer Aralığı:</strong> > 1500 (0x05DC)</li>
+                        <li><strong>Fonksiyon:</strong> Üst katman protokol tanımlayıcısı</li>
+                    </ul>
+                    
+                    <h4>🎯 Yaygın EtherType Değerleri:</h4>
+                    <ul>
+                        <li><strong>0x0800:</strong> IPv4 (Internet Protocol v4)</li>
+                        <li><strong>0x0806:</strong> ARP (Address Resolution Protocol)</li>
+                        <li><strong>0x86DD:</strong> IPv6 (Internet Protocol v6)</li>
+                        <li><strong>0x8100:</strong> IEEE 802.1Q VLAN-tagged</li>
+                        <li><strong>0x88CC:</strong> LLDP (Link Layer Discovery Protocol)</li>
+                        <li><strong>0x8847:</strong> MPLS unicast</li>
+                        <li><strong>0x8848:</strong> MPLS multicast</li>
+                    </ul>
+                    
+                    <h4>📊 Protokol İşleme:</h4>
+                    <ul>
+                        <li><strong>Layer 2:</strong> Switch bu alanı okumaz</li>
+                        <li><strong>Layer 3:</strong> Router/PC bu alana göre packet'i işler</li>
+                        <li><strong>Demultiplexing:</strong> Hangi protokol stack'ine göndereceğini belirler</li>
+                    </ul>
+                    
+                    <h4>🔍 İşlem Örneği:</h4>
+                    <ul>
+                        <li>EtherType = 0x0800 → IPv4 stack'ine gönder</li>
+                        <li>EtherType = 0x0806 → ARP modülüne gönder</li>
+                        <li>EtherType = 0x86DD → IPv6 stack'ine gönder</li>
+                        <li>Bilinmeyen EtherType → Packet drop</li>
+                    </ul>
+                    
+                    <h4>⚡ Ethernet II Avantajları:</h4>
+                    <ul>
+                        <li><strong>Basitlik:</strong> Direkt protokol tanımlama</li>
+                        <li><strong>Hız:</strong> Az overhead, hızlı işleme</li>
+                        <li><strong>Standart:</strong> Internet protokolleri için ideal</li>
+                        <li><strong>Uyumluluk:</strong> Tüm modern sistemlerde desteklenir</li>
+                    </ul>
+                `
+            },
+            
+            'dsap': {
+                title: '🎯 DSAP (Destination Service Access Point)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 1 byte (8 bit)</li>
+                        <li><strong>Fonksiyon:</strong> Hedef servis erişim noktası tanımlayıcısı</li>
+                        <li><strong>Layer:</strong> LLC (Logical Link Control) alt katmanı</li>
+                    </ul>
+                    
+                    <h4>🎯 Bit Yapısı:</h4>
+                    <ul>
+                        <li><strong>Bit 0 (LSB):</strong> I/G bit (Individual/Group)</li>
+                        <li><strong>Bit 1-7:</strong> SAP address (Service Access Point)</li>
+                        <li><strong>I/G = 0:</strong> Individual (tek alıcı)</li>
+                        <li><strong>I/G = 1:</strong> Group (grup alıcı)</li>
+                    </ul>
+                    
+                    <h4>📊 Yaygın DSAP Değerleri:</h4>
+                    <ul>
+                        <li><strong>0x00:</strong> Null SAP</li>
+                        <li><strong>0x02:</strong> Individual LLC Sublayer Management</li>
+                        <li><strong>0x03:</strong> Group LLC Sublayer Management</li>
+                        <li><strong>0x06:</strong> ARPANET Internet Protocol (IP)</li>
+                        <li><strong>0xAA:</strong> SNAP (SubNetwork Access Protocol)</li>
+                        <li><strong>0xE0:</strong> Novell NetWare IPX</li>
+                        <li><strong>0xF0:</strong> IBM NetBIOS</li>
+                        <li><strong>0xFE:</strong> ISO Network Layer Protocol</li>
+                        <li><strong>0xFF:</strong> Global SAP</li>
+                    </ul>
+                    
+                    <h4>🔍 SNAP Kullanımı:</h4>
+                    <ul>
+                        <li>DSAP = 0xAA olduğunda SNAP protokolü kullanılır</li>
+                        <li>SNAP, EtherType benzeri işlevsellik sağlar</li>
+                        <li>5 byte ek SNAP header eklenir</li>
+                        <li>Modern protokollerin LLC üzerinden taşınmasını sağlar</li>
+                    </ul>
+                    
+                    <h4>💡 Pratik Kullanım:</h4>
+                    <ul>
+                        <li><strong>Legacy Protokoller:</strong> IBM SNA, Novell IPX</li>
+                        <li><strong>Kurumsal Ağlar:</strong> Token Ring'den Ethernet geçişi</li>
+                        <li><strong>Protocol Multiplexing:</strong> Birden fazla protokolü aynı link'te</li>
+                    </ul>
+                `
+            },
+            
+            'ssap': {
+                title: '📤 SSAP (Source Service Access Point)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 1 byte (8 bit)</li>
+                        <li><strong>Fonksiyon:</strong> Kaynak servis erişim noktası tanımlayıcısı</li>
+                        <li><strong>İlişki:</strong> Genelde DSAP ile aynı değeri alır</li>
+                    </ul>
+                    
+                    <h4>🎯 Bit Yapısı:</h4>
+                    <ul>
+                        <li><strong>Bit 0 (LSB):</strong> C/R bit (Command/Response)</li>
+                        <li><strong>Bit 1-7:</strong> SAP address</li>
+                        <li><strong>C/R = 0:</strong> Command frame</li>
+                        <li><strong>C/R = 1:</strong> Response frame</li>
+                    </ul>
+                    
+                    <h4>📊 SSAP İşlevleri:</h4>
+                    <ul>
+                        <li><strong>Protocol ID:</strong> Gönderen protokolü belirtir</li>
+                        <li><strong>Flow Control:</strong> Akış kontrolü için kullanılır</li>
+                        <li><strong>Error Recovery:</strong> Hata kurtarma mekanizmalarında</li>
+                        <li><strong>Connection Management:</strong> Bağlantı yönetiminde</li>
+                    </ul>
+                    
+                    <h4>🔄 Command/Response Mekanizması:</h4>
+                    <ul>
+                        <li><strong>Command (C/R=0):</strong> Veri gönderme, bağlantı kurma</li>
+                        <li><strong>Response (C/R=1):</strong> ACK, NAK, status bilgisi</li>
+                        <li><strong>Peer-to-Peer:</strong> Her iki yönde de kullanılabilir</li>
+                    </ul>
+                    
+                    <h4>💡 Örnek Senaryolar:</h4>
+                    <ul>
+                        <li>DSAP=0xE0, SSAP=0xE0: Novell IPX iletişimi</li>
+                        <li>DSAP=0xAA, SSAP=0xAA: SNAP encapsulation</li>
+                        <li>DSAP=0xF0, SSAP=0xF1: NetBIOS command/response</li>
+                    </ul>
+                    
+                    <h4>🚀 Modern Kullanım:</h4>
+                    <ul>
+                        <li><strong>Legacy Support:</strong> Eski sistemlerle uyumluluk</li>
+                        <li><strong>Industrial Networks:</strong> Endüstriyel otomasyon</li>
+                        <li><strong>Embedded Systems:</strong> Gömülü sistem protokolleri</li>
+                    </ul>
+                `
+            },
+            
+            'control': {
+                title: '⚙️ Control Field (LLC)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 1 veya 2 byte</li>
+                        <li><strong>Fonksiyon:</strong> Frame türü ve kontrol bilgisi</li>
+                        <li><strong>HDLC Benzeri:</strong> HDLC protokolünden uyarlanmış</li>
+                    </ul>
+                    
+                    <h4>🎯 Frame Türleri:</h4>
+                    <ul>
+                        <li><strong>I-Frame (Information):</strong> Veri taşıyan frame'ler</li>
+                        <li><strong>S-Frame (Supervisory):</strong> Akış kontrolü frame'leri</li>
+                        <li><strong>U-Frame (Unnumbered):</strong> Bağlantı yönetimi frame'leri</li>
+                    </ul>
+                    
+                    <h4>📊 1-Byte Control Field (U-Frame):</h4>
+                    <ul>
+                        <li><strong>Bit Pattern:</strong> XX1XXX11</li>
+                        <li><strong>Yaygın Değer:</strong> 0x03 (UI - Unnumbered Information)</li>
+                        <li><strong>Kullanım:</strong> Connectionless veri iletimi</li>
+                    </ul>
+                    
+                    <h4>🔄 2-Byte Control Field (I-Frame):</h4>
+                    <ul>
+                        <li><strong>Send Sequence (Ns):</strong> 7 bit gönderme sıra numarası</li>
+                        <li><strong>Receive Sequence (Nr):</strong> 7 bit alma sıra numarası</li>
+                        <li><strong>P/F Bit:</strong> Poll/Final bit</li>
+                        <li><strong>Sliding Window:</strong> 127 frame'e kadar buffer</li>
+                    </ul>
+                    
+                    <h4>📋 S-Frame Türleri:</h4>
+                    <ul>
+                        <li><strong>RR (Receive Ready):</strong> Hazır, devam et</li>
+                        <li><strong>RNR (Receive Not Ready):</strong> Meşgul, bekle</li>
+                        <li><strong>REJ (Reject):</strong> Frame tekrarı iste</li>
+                        <li><strong>SREJ (Selective Reject):</strong> Seçici tekrar</li>
+                    </ul>
+                    
+                    <h4>🚀 Pratik Kullanım:</h4>
+                    <ul>
+                        <li><strong>0x03 (UI):</strong> En yaygın, connectionless iletim</li>
+                        <li><strong>Flow Control:</strong> Yavaş alıcıları koruma</li>
+                        <li><strong>Error Recovery:</strong> Kayıp frame'leri tekrar isteme</li>
+                        <li><strong>Connection Mode:</strong> Güvenilir veri iletimi</li>
+                    </ul>
+                    
+                    <h4>💡 Modern Durum:</h4>
+                    <ul>
+                        <li>Çoğu uygulama basit 0x03 değerini kullanır</li>
+                        <li>TCP gibi üst katman protokolleri reliability sağlar</li>
+                        <li>LLC flow control nadiren kullanılır</li>
+                    </ul>
+                `
+            },
+            
+            'data': {
+                title: '📦 Data Field (Payload)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Ethernet II Boyut:</strong> 46-1500 bytes</li>
+                        <li><strong>802.2 LLC Boyut:</strong> 46-1497 bytes (LLC header dahil değil)</li>
+                        <li><strong>Fonksiyon:</strong> Üst katman protokol verisi</li>
+                    </ul>
+                    
+                    <h4>📏 Boyut Kısıtlamaları:</h4>
+                    <ul>
+                        <li><strong>Minimum 46 byte:</strong> Collision detection için gerekli</li>
+                        <li><strong>Maximum 1500 byte:</strong> MTU (Maximum Transmission Unit)</li>
+                        <li><strong>Padding:</strong> 46 byte'tan kısa ise sıfırlarla doldurulur</li>
+                        <li><strong>Jumbo Frames:</strong> 9000 byte'a kadar (özel ağlarda)</li>
+                    </ul>
+                    
+                    <h4>🎯 İçerik Türleri:</h4>
+                    <ul>
+                        <li><strong>IPv4 Packet:</strong> IP header + TCP/UDP + Application data</li>
+                        <li><strong>ARP Packet:</strong> Address resolution bilgileri</li>
+                        <li><strong>IPv6 Packet:</strong> IPv6 header + payload</li>
+                        <li><strong>VLAN Tagged:</strong> 802.1Q header + original frame</li>
+                    </ul>
+                    
+                    <h4>📊 Katmansal Encapsulation:</h4>
+                    <ul>
+                        <li><strong>Application Layer:</strong> HTTP, FTP, SMTP verisi</li>
+                        <li><strong>Transport Layer:</strong> TCP/UDP header eklenir</li>
+                        <li><strong>Network Layer:</strong> IP header eklenir</li>
+                        <li><strong>Data Link Layer:</strong> Ethernet header eklenir</li>
+                    </ul>
+                    
+                    <h4>🔍 Örnek İçerikler:</h4>
+                    <ul>
+                        <li><strong>Web Traffic:</strong> HTTP GET/POST requests</li>
+                        <li><strong>Email:</strong> SMTP/POP3/IMAP mesajları</li>
+                        <li><strong>File Transfer:</strong> FTP data streams</li>
+                        <li><strong>DNS Queries:</strong> Domain name resolution</li>
+                        <li><strong>DHCP:</strong> IP address assignment</li>
+                    </ul>
+                    
+                    <h4>⚡ Fragmentation:</h4>
+                    <ul>
+                        <li><strong>IP Level:</strong> 1500 byte'tan büyük IP packet'ler fragmente edilir</li>
+                        <li><strong>Path MTU Discovery:</strong> En küçük MTU bulma</li>
+                        <li><strong>Don't Fragment Bit:</strong> Fragmentation'ı engelleme</li>
+                    </ul>
+                    
+                    <h4>🛡️ Güvenlik:</h4>
+                    <ul>
+                        <li><strong>Payload Encryption:</strong> IPSec, SSL/TLS</li>
+                        <li><strong>Deep Packet Inspection:</strong> İçerik analizi</li>
+                        <li><strong>Malware Detection:</strong> Payload pattern matching</li>
+                    </ul>
+                `
+            },
+            
+            'fcs': {
+                title: '🛡️ FCS (Frame Check Sequence)',
+                content: `
+                    <h4>📋 Genel Bilgi:</h4>
+                    <ul>
+                        <li><strong>Boyut:</strong> 4 bytes (32 bit)</li>
+                        <li><strong>Algoritma:</strong> CRC-32 (Cyclic Redundancy Check)</li>
+                        <li><strong>Polinom:</strong> 0x04C11DB7 (IEEE 802.3 standard)</li>
+                    </ul>
+                    
+                    <h4>🎯 Hata Tespit Yeteneği:</h4>
+                    <ul>
+                        <li><strong>Single Bit Errors:</strong> %100 tespit</li>
+                        <li><strong>Double Bit Errors:</strong> %100 tespit</li>
+                        <li><strong>Burst Errors:</strong> ≤32 bit %100 tespit</li>
+                        <li><strong>Random Errors:</strong> 99.9999998% tespit oranı</li>
+                    </ul>
+                    
+                    <h4>🔢 CRC-32 Hesaplama:</h4>
+                    <ul>
+                        <li><strong>Input:</strong> Destination + Source + Type/Length + Data</li>
+                        <li><strong>İşlem:</strong> Polynomial division (modulo-2)</li>
+                        <li><strong>Remainder:</strong> 32-bit CRC değeri</li>
+                        <li><strong>Verification:</strong> Alıcıda aynı hesaplama tekrarlanır</li>
+                    </ul>
+                    
+                    <h4>📡 Network Card İşlemi:</h4>
+                    <ul>
+                        <li><strong>Gönderici:</strong> Hardware level'da CRC hesaplar ve ekler</li>
+                        <li><strong>Alıcı:</strong> CRC'yi kontrol eder, hatalı frame'leri atar</li>
+                        <li><strong>CPU Yükü:</strong> Minimal, hardware acceleration</li>
+                        <li><strong>Real-time:</strong> Wire speed'de çalışır</li>
+                    </ul>
+                    
+                    <h4>⚠️ Hata Durumları:</h4>
+                    <ul>
+                        <li><strong>CRC Error:</strong> Frame drop edilir</li>
+                        <li><strong>Size Error:</strong> Frame too short/long</li>
+                        <li><strong>Alignment Error:</strong> Nibble boundary problemi</li>
+                        <li><strong>Collision:</strong> Carrier extension error</li>
+                    </ul>
+                    
+                    <h4>📊 Error Statistics:</h4>
+                    <ul>
+                        <li><strong>Switch/Router Counters:</strong> CRC error sayısı tutulur</li>
+                        <li><strong>SNMP MIB:</strong> ifInErrors, ifOutErrors</li>
+                        <li><strong>Link Quality:</strong> Error rate ile ölçülür</li>
+                        <li><strong>Cable Problems:</strong> Yüksek CRC error oranı</li>
+                    </ul>
+                    
+                    <h4>🔧 Troubleshooting:</h4>
+                    <ul>
+                        <li><strong>Physical Layer:</strong> Kablo, konektör kontrolleri</li>
+                        <li><strong>Electromagnetic Interference:</strong> EMI/RFI kaynakları</li>
+                        <li><strong>Speed/Duplex Mismatch:</strong> Auto-negotiation problemleri</li>
+                        <li><strong>Hardware Fault:</strong> Faulty NIC/switch port</li>
+                    </ul>
+                    
+                    <h4>💡 İlginç Bilgiler:</h4>
+                    <ul>
+                        <li>32-bit CRC, 4 milyar farklı değer üretebilir</li>
+                        <li>Gigabit Ethernet'te saniyede milyonlarca CRC hesaplanır</li>
+                        <li>ASIC'ler bu işlemi hardware level'da yapar</li>
+                        <li>Software CRC hesaplama çok yavaş kalır</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Field click event handlers
+        document.querySelectorAll('.field').forEach(field => {
+            field.addEventListener('click', function() {
+                const fieldType = this.getAttribute('data-field');
+                const info = fieldInfo[fieldType];
+                
+                if (info) {
+                    // Remove active class from all fields
+                    document.querySelectorAll('.field').forEach(f => f.classList.remove('active'));
+                    
+                    // Add active class to clicked field
+                    this.classList.add('active');
+                    
+                    // Update info panel
+                    document.getElementById('info-title').textContent = info.title;
+                    document.getElementById('info-content').innerHTML = info.content;
+                    
+                    // Show info panel
+                    const infoPanel = document.getElementById('info-panel');
+                    infoPanel.classList.add('show');
+                    
+                    // Scroll to info panel
+                    infoPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+
+        // Add some visual feedback
+        document.querySelectorAll('.field').forEach(field => {
+            field.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.transform = 'translateY(-3px) scale(1.02)';
+                }
+            });
+            
+            field.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.transform = '';
+                }
+            });
+        });
+    </script>
